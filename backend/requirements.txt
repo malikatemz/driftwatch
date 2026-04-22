@@ -5,6 +5,7 @@ pydantic-settings==2.6.1
 python-dotenv==1.0.1
 supabase==2.10.0
 clerk-backend-api==0.4.0
+slowapi==0.1.9
 stripe==8.13.0
 anthropic==0.30.0
 sendgrid==6.11.0

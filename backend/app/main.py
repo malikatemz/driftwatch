@@ -1,16 +1,12 @@
 """
 Driftwatch API v2 — production-ready with rate limiting, auth, and structured errors.
 """
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from slowapi import Limiter
-from slowapi.util import get_remote_address
 from app.core.config import settings
 from app.core.auth import verify_clerk_token, verify_sdk_key
 from app.routes import events, alerts, scans, reports, webhooks, billing
-
-limiter = Limiter(key_func=get_remote_address)
 
 app = FastAPI(
     title="Driftwatch API",
