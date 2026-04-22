@@ -2,9 +2,13 @@
 Alert Engine — evaluates events and creates alerts.
 Anomaly detection uses Z-score on request rate, IP clusters, response codes.
 """
+import logging
+
 from app.core.database import get_supabase
 from app.models.schemas import AlertCreate
-import numpy as np
+from app.services.notification import dispatch_alert
+
+logger = logging.getLogger(__name__)
 
 
 class AlertEngine:
@@ -75,12 +79,29 @@ class AlertEngine:
                 "resolved": False,
             }).execute()
 
-        # TODO: Send Slack/email notifications
-        self._notify(alerts)
+        # Dispatch notifications for high/critical alerts
+        for alert in alerts:
+            severity = alert.severity.lower()
+            if severity in ("critical", "high"):
+                try:
+                    dispatch_alert(
+                        org_id,
+                        {
+                            **alert.model_dump(),
+                            "created_at": _now_iso(),
+                        },
+                    )
+                except Exception as e:
+                    # Non-blocking — never crash the alert save
+                    logger.error(f"Failed to dispatch notification for alert '{alert.title}': {e}")
 
     def _notify(self, alerts: list[AlertCreate]):
-        """Send notifications via Slack/email."""
-        critical = [a for a in alerts if a.severity == "critical"]
-        if critical:
-            # TODO: Send immediate Slack DM to org admin
-            pass
+        """Legacy stub — notifications are now dispatched per-alert in save_alerts."""
+        pass
+
+
+def _now_iso() -> str:
+    """Return current UTC time as ISO string."""
+    from datetime import datetime, timezone
+
+    return datetime.now(timezone.utc).isoformat()

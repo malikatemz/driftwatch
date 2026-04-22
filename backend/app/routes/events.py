@@ -3,9 +3,13 @@ Events routes — receive telemetry from Python and Node.js SDKs.
 Supports both x-driftwatch-api-key (v2) and x-sentinel-api-key (legacy) headers.
 """
 from fastapi import APIRouter, Request, Header, HTTPException
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
 from app.models.schemas import EventCreate
 from app.core.database import get_supabase
 from app.core.auth import verify_sdk_key
+from app.core.ratelimit import limiter
 
 router = APIRouter()
 
@@ -23,9 +27,10 @@ def resolve_org(key: str | None) -> str:
 
 
 @router.post("/")
+@limiter.limit("200/minute")
 async def ingest_event(
-    event: EventCreate,
     request: Request,
+    event: EventCreate,
     x_driftwatch_api_key: str | None = Header(None, alias="x-driftwatch-api-key"),
     x_sentinel_api_key: str | None = Header(None, alias="x-sentinel-api-key"),
     x_api_key: str | None = Header(None, alias="x-api-key"),
@@ -45,6 +50,7 @@ async def ingest_event(
 
 
 @router.post("/batch")
+@limiter.limit("100/minute")
 async def ingest_batch(
     request: Request,
     x_driftwatch_api_key: str | None = Header(None, alias="x-driftwatch-api-key"),
