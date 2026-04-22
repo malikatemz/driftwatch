@@ -1,7 +1,7 @@
 """
 Driftwatch API v2 — production-ready with rate limiting, auth, and structured errors.
 """
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.core.config import settings
