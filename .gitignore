@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+.env
+.venv
+venv/
+ENV/
+.eggs/
+*.egg-info/
+dist/
+build/
+
+# Node
+node_modules/
+.next/
+out/
+.npm
+.yarn
+
+# Misc
+.DS_Store
+*.log
+.nyc_output/
+coverage/
+.cache/
+
+# Supabase
+.supabase/
+.temp/
+
+# IDE
+.idea/
+.vscode/
+*.swp
