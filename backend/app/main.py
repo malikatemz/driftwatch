@@ -10,7 +10,7 @@ from slowapi.errors import SlowAPILimitExceeded
 from app.core.config import settings
 from app.core.auth import verify_clerk_token, verify_sdk_key
 from app.core.ratelimit import limiter
-from app.routes import events, alerts, scans, reports, webhooks, billing
+from app.routes import events, alerts, scans, reports, webhooks, billing, clerk_webhook
 
 app = FastAPI(
     title="Driftwatch API",
@@ -97,6 +97,7 @@ app.include_router(scans.router, prefix="/api/v2/scans", tags=["scans"])
 app.include_router(reports.router, prefix="/api/v2/reports", tags=["reports"])
 app.include_router(webhooks.router, prefix="/api/v2/webhooks", tags=["webhooks"])
 app.include_router(billing.router, prefix="/api/v2/billing", tags=["billing"])
+app.include_router(clerk_webhook.router, prefix="/api/v2/webhooks", tags=["clerk"])
 
 # ─── Dashboard (summary) ──────────────────────────────────────────────────────
 @app.get("/api/v2/org/{org_id}/dashboard")

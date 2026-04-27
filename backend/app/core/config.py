@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     # Clerk Auth
     CLERK_PUBLISHABLE_KEY: str = Field(default="")
     CLERK_SECRET_KEY: str = Field(default="")
+    CLERK_WEBHOOK_SECRET: str = Field(default="")  # Svix signing secret from Clerk dashboard
 
     # Stripe
     STRIPE_PUBLISHABLE_KEY: str = Field(default="")
