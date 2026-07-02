@@ -9,9 +9,10 @@ from pydantic import Field
 
 class Settings(BaseSettings):
     # App
-    APP_NAME: str = "SentinelAPI"
+    APP_NAME: str = "Driftwatch"
     DEBUG: bool = Field(default=False)
-    API_VERSION: str = "v1"
+    API_VERSION: str = "v2"
+    CORS_ORIGINS: str = Field(default="http://localhost:3000")
 
     # Supabase
     SUPABASE_URL: str = Field(default="")
@@ -35,7 +36,7 @@ class Settings(BaseSettings):
 
     # SendGrid
     SENDGRID_API_KEY: str = Field(default="")
-    SENDGRID_FROM_EMAIL: str = "alerts@sentinelapi.io"
+    SENDGRID_FROM_EMAIL: str = "alerts@driftwatch.io"
 
     # Claude API
     ANTHROPIC_API_KEY: str = Field(default="")

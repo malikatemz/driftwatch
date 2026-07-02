@@ -4,7 +4,7 @@ Reports routes — AI-generated compliance reports.
 from fastapi import APIRouter, HTTPException
 from app.models.schemas import ReportGenerate, ReportResponse
 from app.core.database import get_supabase
-from app.services.reporter import generate_compliance_report
+from app.services.compliance import generate_compliance_report
 
 router = APIRouter()
 
@@ -23,7 +23,7 @@ async def list_reports(org_id: str, limit: int = 20):
     return result.data
 
 
-@router.post("/{org_id}/generate")
+@router.post("/{org_id}/generate", include_in_schema=False)
 async def create_report(org_id: str, report_type: ReportGenerate):
     """
     Generate a compliance report using Claude.

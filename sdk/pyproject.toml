@@ -3,16 +3,16 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "sentinelapi"
+name = "driftwatch"
 version = "0.1.0"
 description = "Security monitoring for developer APIs"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [
-    {name = "SentinelAPI", email = "dev@sentinelapi.io"},
+    {name = "Driftwatch", email = "dev@driftwatch.io"},
 ]
-url = "https://sentinelapi.io"
+url = "https://driftwatch.io"
 keywords = ["security", "monitoring", "api", "devsecops", "compliance"]
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -28,6 +28,7 @@ dependencies = [
     "pydantic>=2.0",
     "click>=8.0",
     "python-dotenv>=1.0",
+    "nest-asyncio>=1.6.0",
 ]
 
 [project.optional-dependencies]
@@ -38,10 +39,10 @@ dev = [
 ]
 
 [project.scripts]
-sentinel = "sentinelapi.cli:cli"
+driftwatch = "driftwatch.cli:cli"
 
 [tool.setuptools]
-packages = ["sentinelapi"]
+packages = ["driftwatch"]
 
 [tool.ruff]
 line-length = 88

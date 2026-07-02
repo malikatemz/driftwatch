@@ -1,6 +1,6 @@
 """
 ASGI/WSGI middleware for FastAPI, Flask, Django.
-Usage: sentinelapi.watch(app)
+Usage: driftwatch.watch(app)
 """
 import asyncio
 import os
@@ -135,7 +135,7 @@ class _EventQueue:
             await self._flush()
 
     async def _flush(self) -> None:
-        """Flush all queued events to SentinelAPI."""
+        """Flush all queued events to Driftwatch."""
         async with self._lock:
             if not self._queue:
                 return
@@ -145,9 +145,9 @@ class _EventQueue:
         try:
             async with httpx.AsyncClient() as client:
                 await client.post(
-                    f"{self.base_url}/api/v1/events/batch",
+                    f"{self.base_url}/api/v2/events/batch",
                     json={"events": events},
-                    headers={"x-sentinel-api-key": self.api_key},
+                    headers={"x-driftwatch-api-key": self.api_key},
                     timeout=10.0,
                 )
         except Exception:
@@ -166,22 +166,22 @@ class _EventQueue:
         await self._flush()
 
 
-# ─── SentinelAPI Middleware ───────────────────────────────────────────────────
+# ─── Driftwatch Middleware ───────────────────────────────────────────────────
 
-class SentinelAPIMiddleware:
-    """ASGI middleware that instruments all HTTP requests and sends to SentinelAPI."""
+class DriftwatchMiddleware:
+    """ASGI middleware that instruments all HTTP requests and sends to Driftwatch."""
 
     def __init__(
         self,
         app,
         api_key: str | None = None,
         org_id: str | None = None,
-        base_url: str = "https://api.sentinelapi.io",
+        base_url: str = "https://api.driftwatch.io",
         flush_interval: float = 5.0,
     ):
         self.app = app
-        self.api_key = api_key or os.getenv("SENTINEL_API_KEY")
-        self.org_id = org_id or os.getenv("SENTINEL_ORG_ID")
+        self.api_key = api_key or os.getenv("DRIFTWATCH_API_KEY")
+        self.org_id = org_id or os.getenv("DRIFTWATCH_ORG_ID")
         self.base_url = base_url
         self._queue = _EventQueue(self.api_key, self.base_url, flush_interval)
 
@@ -215,45 +215,45 @@ def watch(
     app,
     api_key: str | None = None,
     org_id: str | None = None,
-    base_url: str = "https://api.sentinelapi.io",
+    base_url: str = "https://api.driftwatch.io",
     flush_interval: float = 5.0,
 ) -> None:
     """
-    SentinelAPI monitoring middleware.
+    Driftwatch monitoring middleware.
 
     Wraps a FastAPI/Starlette app and intercepts all requests, sending
-    request metadata + anomaly scoring to the SentinelAPI cloud in batches.
+    request metadata + anomaly scoring to the Driftwatch cloud in batches.
 
     Args:
         app: FastAPI, Starlette, or any ASGI-compatible app.
-        api_key: Your SentinelAPI key. Falls back to SENTINEL_API_KEY env var.
-        org_id: Organization ID for this deployment. Falls back to SENTINEL_ORG_ID env var.
-        base_url: API base URL. Defaults to https://api.sentinelapi.io.
+        api_key: Your Driftwatch API key. Falls back to DRIFTWATCH_API_KEY env var.
+        org_id: Organization ID for this deployment. Falls back to DRIFTWATCH_ORG_ID env var.
+        base_url: API base URL. Defaults to https://api.driftwatch.io.
         flush_interval: Seconds between batch flushes. Default 5.
 
     Usage:
         from fastapi import FastAPI
-        import sentinelapi
+        import driftwatch
 
         app = FastAPI()
-        sentinelapi.watch(app, api_key="sk_...", org_id="org_...")
+        driftwatch.watch(app, api_key="dw_live_...")
 
         # Django (in settings.py MIDDLEWARE)
-        sentinelapi.watch(app, api_key="sk_...", org_id="org_...")
+        driftwatch.watch(app, api_key="dw_live_...")
 
         # Flask via Werkzeug
-        sentinelapi.watch(app, api_key="sk_...", org_id="org_...")
+        driftwatch.watch(app, api_key="dw_live_...")
     """
-    key = api_key or os.getenv("SENTINEL_API_KEY")
+    key = api_key or os.getenv("DRIFTWATCH_API_KEY")
     if not key:
         raise ValueError(
-            "SentinelAPI API key required. Set SENTINEL_API_KEY env var or pass api_key."
+            "Driftwatch API key required. Set DRIFTWATCH_API_KEY env var or pass api_key."
         )
 
     from starlette.applications import Starlette
     if isinstance(app, Starlette):
         app.add_middleware(
-            SentinelAPIMiddleware,
+            DriftwatchMiddleware,
             api_key=key,
             org_id=org_id,
             base_url=base_url,
@@ -261,4 +261,5 @@ def watch(
         )
     else:
         # Generic ASGI app — apply middleware directly
-        app.add_middleware(SentinelAPIMiddleware, api_key=key, org_id=org_id, base_url=base_url, flush_interval=flush_interval)
+        if hasattr(app, "add_middleware"):
+            app.add_middleware(DriftwatchMiddleware, api_key=key, org_id=org_id, base_url=base_url, flush_interval=flush_interval)
