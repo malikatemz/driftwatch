@@ -1,5 +1,5 @@
 """
-SentinelAPI CLI — sentinel command.
+Driftwatch CLI — driftwatch command.
 """
 import os
 import sys
@@ -9,9 +9,9 @@ import httpx
 
 
 @click.group()
-@click.version_option("0.1.0", prog_name="sentinelapi")
+@click.version_option("0.1.0", prog_name="driftwatch")
 def cli() -> None:
-    """SentinelAPI — Security monitoring for developer APIs."""
+    """Driftwatch — Security monitoring for developer APIs."""
     pass
 
 
@@ -19,11 +19,11 @@ def cli() -> None:
 @click.argument("target")
 @click.option("--ports", "-p", help="Comma-separated list of ports to scan")
 @click.option("--timeout", "-t", default=1.5, type=float, help="Per-port timeout in seconds")
-@click.option("--api-key", "-k", help="SentinelAPI key (or set SENTINEL_API_KEY)")
-@click.option("--base-url", default="https://api.sentinelapi.io", help="API base URL")
+@click.option("--api-key", "-k", help="Driftwatch API key (or set DRIFTWATCH_API_KEY)")
+@click.option("--base-url", default="https://api.driftwatch.io", help="API base URL")
 def scan(target: str, ports: str | None, timeout: float, api_key: str | None, base_url: str) -> None:
     """Scan a target host for open ports and security risks."""
-    from sentinelapi.scanner import scan as run_scan
+    from driftwatch.scanner import scan as run_scan
 
     port_list = None
     if ports:
@@ -33,9 +33,9 @@ def scan(target: str, ports: str | None, timeout: float, api_key: str | None, ba
             click.echo("Error: --ports must be comma-separated integers", err=True)
             sys.exit(1)
 
-    key = api_key or os.getenv("SENTINEL_API_KEY")
+    key = api_key or os.getenv("DRIFTWATCH_API_KEY")
     if not key:
-        click.echo("Error: API key required. Set SENTINEL_API_KEY or pass --api-key", err=True)
+        click.echo("Error: API key required. Set DRIFTWATCH_API_KEY or pass --api-key", err=True)
         sys.exit(1)
 
     click.echo(f"Scanning {target} ...")
@@ -57,15 +57,15 @@ def scan(target: str, ports: str | None, timeout: float, api_key: str | None, ba
 @cli.command()
 @click.argument("org_id")
 @click.argument("report_type", type=click.Choice(["soc2", "gdpr", "iso27001"]), default="soc2")
-@click.option("--api-key", "-k", help="SentinelAPI key (or set SENTINEL_API_KEY)")
-@click.option("--base-url", default="https://api.sentinelapi.io", help="API base URL")
+@click.option("--api-key", "-k", help="Driftwatch API key (or set DRIFTWATCH_API_KEY)")
+@click.option("--base-url", default="https://api.driftwatch.io", help="API base URL")
 def report(org_id: str, report_type: str, api_key: str | None, base_url: str) -> None:
     """Generate or fetch a compliance report."""
-    from sentinelapi.reporter import report as fetch_report
+    from driftwatch.reporter import report as fetch_report
 
-    key = api_key or os.getenv("SENTINEL_API_KEY")
+    key = api_key or os.getenv("DRIFTWATCH_API_KEY")
     if not key:
-        click.echo("Error: API key required. Set SENTINEL_API_KEY or pass --api-key", err=True)
+        click.echo("Error: API key required. Set DRIFTWATCH_API_KEY or pass --api-key", err=True)
         sys.exit(1)
 
     click.echo(f"Fetching {report_type.upper()} report for org {org_id} ...")
@@ -85,12 +85,12 @@ def report(org_id: str, report_type: str, api_key: str | None, base_url: str) ->
 
 @cli.command()
 @click.argument("api_key", required=False)
-@click.option("--base-url", default="https://api.sentinelapi.io", help="API base URL")
+@click.option("--base-url", default="https://api.driftwatch.io", help="API base URL")
 def init(api_key: str | None, base_url: str) -> None:
-    """Check your SentinelAPI credentials."""
-    key = api_key or os.getenv("SENTINEL_API_KEY")
+    """Check your Driftwatch credentials."""
+    key = api_key or os.getenv("DRIFTWATCH_API_KEY")
     if not key:
-        click.echo("Error: API key required. Set SENTINEL_API_KEY or pass api_key argument", err=True)
+        click.echo("Error: API key required. Set DRIFTWATCH_API_KEY or pass api_key argument", err=True)
         sys.exit(1)
 
     import asyncio
@@ -98,8 +98,8 @@ def init(api_key: str | None, base_url: str) -> None:
     async def _check():
         async with httpx.AsyncClient() as client:
             resp = await client.get(
-                f"{base_url}/api/v1/status",
-                headers={"x-sentinel-api-key": key},
+                f"{base_url}/api/v2/status",
+                headers={"x-driftwatch-api-key": key},
                 timeout=5.0,
             )
             resp.raise_for_status()
@@ -110,7 +110,7 @@ def init(api_key: str | None, base_url: str) -> None:
         asyncio.set_event_loop(loop)
         data = loop.run_until_complete(_check())
         loop.close()
-        click.echo(f"✓ Connected to SentinelAPI ({data.get('org_name', 'OK')})")
+        click.echo(f"✓ Connected to Driftwatch ({data.get('org_name', 'OK')})")
     except httpx.HTTPStatusError:
         click.echo("✗ Invalid API key or network error", err=True)
         sys.exit(1)

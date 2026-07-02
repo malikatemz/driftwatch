@@ -4,7 +4,7 @@ Alerts routes.
 from fastapi import APIRouter, HTTPException
 from app.models.schemas import AlertCreate, AlertResponse
 from app.core.database import get_supabase
-from app.services.alert_engine import AlertEngine
+from app.services.anomaly_engine import AlertEngine
 
 router = APIRouter()
 alert_engine = AlertEngine()

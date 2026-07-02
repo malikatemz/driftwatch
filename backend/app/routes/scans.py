@@ -4,7 +4,7 @@ Scans routes.
 from fastapi import APIRouter, BackgroundTasks
 from app.models.schemas import ScanCreate, ScanResponse
 from app.core.database import get_supabase
-from app.services.scanner import run_scan
+from app.services.port_scanner import run_scan
 
 router = APIRouter()
 
@@ -23,7 +23,7 @@ async def list_scans(org_id: str, limit: int = 20):
     return result.data
 
 
-@router.post("/{org_id}/run")
+@router.post("/{org_id}/run", include_in_schema=False)
 async def trigger_scan(org_id: str, scan: ScanCreate, background_tasks: BackgroundTasks):
     """
     Trigger a port scan in the background.

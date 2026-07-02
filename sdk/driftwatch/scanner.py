@@ -1,6 +1,6 @@
 """
 Port scanner — detects exposed ports on infrastructure.
-Usage: sentinelapi.scan("api.yoursite.com")
+Usage: driftwatch.scan("api.yoursite.com")
 """
 import socket
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -75,11 +75,11 @@ async def _report_scan_results(
     api_key: str,
     base_url: str,
 ) -> None:
-    """Send scan results to SentinelAPI as a security event."""
+    """Send scan results to Driftwatch as a security event."""
     try:
         async with httpx.AsyncClient() as client:
             await client.post(
-                f"{base_url}/api/v1/events/",
+                f"{base_url}/api/v2/events/",
                 json={
                     "event_type": "scan_completed",
                     "target": target,
@@ -87,7 +87,7 @@ async def _report_scan_results(
                     "risks": risks,
                     "scanned_at": datetime.now(timezone.utc).isoformat(),
                 },
-                headers={"x-sentinel-api-key": api_key},
+                headers={"x-driftwatch-api-key": api_key},
                 timeout=10.0,
             )
     except Exception:
@@ -99,7 +99,7 @@ def scan(
     ports: list[int] | None = None,
     timeout: float = 1.5,
     api_key: str | None = None,
-    base_url: str = "https://api.sentinelapi.io",
+    base_url: str = "https://api.driftwatch.io",
     report: bool = True,
 ) -> dict:
     """
@@ -109,9 +109,9 @@ def scan(
         target: Hostname or IP address to scan.
         ports: List of ports to scan. Defaults to COMMON_PORTS.
         timeout: Per-port connection timeout in seconds. Default 1.5.
-        api_key: SentinelAPI key. Falls back to SENTINEL_API_KEY env var.
-        base_url: SentinelAPI base URL.
-        report: Whether to POST scan results to SentinelAPI. Default True.
+        api_key: Driftwatch API key. Falls back to DRIFTWATCH_API_KEY env var.
+        base_url: Driftwatch API base URL.
+        report: Whether to POST scan results to Driftwatch. Default True.
 
     Returns:
         dict with keys:
@@ -150,8 +150,8 @@ def scan(
         "scanned_at": scanned_at,
     }
 
-    # Report results to SentinelAPI in background
-    key = api_key or os.getenv("SENTINEL_API_KEY")
+    # Report results to Driftwatch in background
+    key = api_key or os.getenv("DRIFTWATCH_API_KEY")
     if key and report:
         import asyncio
         try:

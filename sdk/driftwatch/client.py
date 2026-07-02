@@ -1,26 +1,26 @@
 """
-SentinelAPI client for manual event ingestion.
+Driftwatch client for manual event ingestion.
 """
 import asyncio
 import httpx
 import os
 
 
-class SentinelClient:
-    """Manual event ingestion client for SentinelAPI.
+class DriftwatchClient:
+    """Manual event ingestion client for Driftwatch.
 
     Args:
-        api_key: Your SentinelAPI key. Falls back to SENTINEL_API_KEY env var.
-        base_url: API base URL. Defaults to https://api.sentinelapi.io.
+        api_key: Your Driftwatch API key. Falls back to DRIFTWATCH_API_KEY env var.
+        base_url: API base URL. Defaults to https://api.driftwatch.io.
     """
 
-    def __init__(self, api_key: str | None = None, base_url: str = "https://api.sentinelapi.io"):
-        self.api_key = api_key or os.getenv("SENTINEL_API_KEY")
+    def __init__(self, api_key: str | None = None, base_url: str = "https://api.driftwatch.io"):
+        self.api_key = api_key or os.getenv("DRIFTWATCH_API_KEY")
         self.base_url = base_url
         if not self.api_key:
-            raise ValueError("SentinelAPI API key required. Set SENTINEL_API_KEY env var or pass api_key.")
+            raise ValueError("Driftwatch API key required. Set DRIFTWATCH_API_KEY env var or pass api_key.")
         self._client = httpx.AsyncClient(
-            headers={"x-sentinel-api-key": self.api_key},
+            headers={"x-driftwatch-api-key": self.api_key},
             timeout=30.0,
         )
 
@@ -32,7 +32,7 @@ class SentinelClient:
         Returns:
             Response JSON dict.
         """
-        resp = await self._client.post(f"{self.base_url}/api/v1/events/", json=event)
+        resp = await self._client.post(f"{self.base_url}/api/v2/events/", json=event)
         resp.raise_for_status()
         return resp.json()
 
@@ -44,7 +44,7 @@ class SentinelClient:
         Returns:
             Response JSON dict.
         """
-        resp = await self._client.post(f"{self.base_url}/api/v1/events/batch", json={"events": events})
+        resp = await self._client.post(f"{self.base_url}/api/v2/events/batch", json={"events": events})
         resp.raise_for_status()
         return resp.json()
 
@@ -60,7 +60,7 @@ class SentinelClient:
         params = {}
         if resolved is not None:
             params["resolved"] = str(resolved).lower()
-        resp = await self._client.get(f"{self.base_url}/api/v1/alerts/{org_id}", params=params)
+        resp = await self._client.get(f"{self.base_url}/api/v2/alerts/{org_id}", params=params)
         resp.raise_for_status()
         return resp.json()
 
@@ -74,7 +74,7 @@ class SentinelClient:
             Response JSON dict with scan status.
         """
         resp = await self._client.post(
-            f"{self.base_url}/api/v1/scans/{org_id}/run",
+            f"{self.base_url}/api/v2/scans/{org_id}/run",
             json={"target": target},
         )
         resp.raise_for_status()
@@ -88,21 +88,31 @@ class SentinelClient:
         Returns:
             Response JSON dict with reports list.
         """
-        resp = await self._client.get(f"{self.base_url}/api/v1/reports/{org_id}")
+        resp = await self._client.get(f"{self.base_url}/api/v2/reports/{org_id}")
         resp.raise_for_status()
         return resp.json()
+
+    async def health(self) -> dict:
+        """Check API health and auth status."""
+        resp = await self._client.get(f"{self.base_url}/api/v2/status")
+        resp.raise_for_status()
+        return resp.json()
+
+    async def shutdown(self) -> None:
+        """Close the underlying HTTP client."""
+        await self.close()
 
     async def close(self) -> None:
         """Close the underlying HTTP client."""
         await self._client.aclose()
 
-    async def __aenter__(self) -> "SentinelClient":
+    async def __aenter__(self) -> "DriftwatchClient":
         return self
 
     async def __aexit__(self, *args) -> None:
         await self.close()
 
-    def __enter__(self) -> "SentinelClient":
+    def __enter__(self) -> "DriftwatchClient":
         return self
 
     def __exit__(self, *args) -> None:

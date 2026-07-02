@@ -26,7 +26,7 @@ def resolve_org(key: str | None) -> str:
     return org_id or "demo-org"
 
 
-@router.post("/")
+@router.post("/", include_in_schema=False)
 @limiter.limit("200/minute")
 async def ingest_event(
     request: Request,
@@ -49,7 +49,7 @@ async def ingest_event(
     return {"id": result.data[0]["id"]}
 
 
-@router.post("/batch")
+@router.post("/batch", include_in_schema=False)
 @limiter.limit("100/minute")
 async def ingest_batch(
     request: Request,
